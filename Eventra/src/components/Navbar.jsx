@@ -6,7 +6,7 @@ import Logo from "../assets/eventralogo.png";
 const navItems = [
   { name: "All Events", path: "/" },
   { name: "Your Bookings", path: "/bookings" },
-  { name: "Dashboard", path: "/dashboard" },
+  // { name: "Dashboard", path: "/dashboard" },
 ];
 
 export default function Navbar() {
@@ -15,7 +15,7 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white/80 backdrop-blur shadow-lg px-6 py-1 fixed w-full z-50">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <div className="max-w-3xl mx-auto flex items-center justify-between">
         {/* Left: Logo and Name */}
         <Link to="/" className="flex items-center space-x-3 group">
           <img
@@ -55,12 +55,12 @@ export default function Navbar() {
               />
             </Link>
           ))}
-          <Link
+          {/* <Link
             to="/signup"
             className="ml-4 bg-gradient-to-r from-blue-500 to-fuchsia-500 hover:from-blue-600 hover:to-fuchsia-600 text-white px-5 py-2 rounded-lg font-semibold shadow transition-all duration-200"
           >
             Create Account
-          </Link>
+          </Link> */}
         </div>
 
         {/* Mobile Hamburger */}
@@ -91,13 +91,13 @@ export default function Navbar() {
                 {item.name}
               </Link>
             ))}
-            <Link
+            {/* <Link
               to="/signup"
               className="w-full text-center bg-gradient-to-r from-blue-500 to-fuchsia-500 text-white px-5 py-2 rounded-lg font-semibold shadow transition-all duration-200 mt-2"
               onClick={() => setMenuOpen(false)}
             >
               Create Account
-            </Link>
+            </Link> */}
           </div>
         </div>
       )}

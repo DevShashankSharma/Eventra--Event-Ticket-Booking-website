@@ -1,55 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Add this import
 
-const events = [
-	{
-		id: 1,
-		name: "Future Fest 2025",
-		date: "10th August 2025",
-		time: "6:00 PM IST",
-		description:
-			"Join us for a virtual event packed with tech talks, live music, networking, and much more! Experience the future of technology and entertainment from the comfort of your home.",
-		image:
-			"https://images.unsplash.com/photo-1515168833906-d2a3b82b1a5e?auto=format&fit=crop&w=600&q=80",
-		type: "Tech",
-		category: "Conference",
-		price: 299,
-		host: "Eventra Team",
-		badge: "🔥 Popular",
-	},
-	{
-		id: 2,
-		name: "AI Innovators Summit",
-		date: "18th September 2025",
-		time: "4:00 PM IST",
-		description:
-			"A gathering of the brightest minds in AI. Keynotes, workshops, and panel discussions on the latest in artificial intelligence and machine learning.",
-		image:
-			"https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=600&q=80",
-		type: "AI",
-		category: "Summit",
-		price: 499,
-		host: "AI World Org",
-		badge: "🌟 Featured",
-	},
-	{
-		id: 3,
-		name: "Music Mania Live",
-		date: "25th October 2025",
-		time: "8:00 PM IST",
-		description:
-			"A virtual concert featuring top artists and bands. Enjoy live performances, interactive sessions, and exclusive backstage access.",
-		image:
-			"https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80",
-		type: "Music",
-		category: "Concert",
-		price: 199,
-		host: "Live Nation",
-		badge: "🎵 Music",
-	},
-];
-
-const eventTypes = ["All", ...Array.from(new Set(events.map((e) => e.type)))];
-const categories = ["All", ...Array.from(new Set(events.map((e) => e.category)))];
 const priceRanges = [
 	{ label: "All", min: 0, max: Infinity },
 	{ label: "Under ₹200", min: 0, max: 200 },
@@ -58,10 +9,25 @@ const priceRanges = [
 ];
 
 const Events = () => {
+	const [events, setEvents] = useState([]);
 	const [search, setSearch] = useState("");
 	const [type, setType] = useState("All");
 	const [category, setCategory] = useState("All");
 	const [price, setPrice] = useState("All");
+	const navigate = useNavigate(); // Add this
+
+	useEffect(() => {
+		fetch("http://localhost:5000/api/events")
+			.then((res) => res.json())
+			.then((data) => setEvents(data))
+			.catch((err) => {
+				console.error("Error fetching events:", err);
+			});
+	}, []);
+
+	// Dynamically generate filter options from fetched events
+	const eventTypes = ["All", ...Array.from(new Set(events.map((e) => e.type)))];
+	const categories = ["All", ...Array.from(new Set(events.map((e) => e.category)))];
 
 	const filteredEvents = events.filter((event) => {
 		const matchesType = type === "All" || event.type === type;
@@ -140,8 +106,14 @@ const Events = () => {
 				) : (
 					filteredEvents.map((event) => (
 						<div
-							key={event.id}
-							className="group flex flex-col bg-white rounded-3xl shadow-xl border border-cyan-100 hover:shadow-violet-200/40 transition-all duration-300 overflow-hidden"
+							key={event._id}
+							className="group flex flex-col bg-white rounded-3xl shadow-xl border border-cyan-100 hover:shadow-violet-300/60 hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-200 overflow-hidden cursor-pointer"
+							onClick={() => navigate(`/event/${event._id}`)} // Make card clickable
+							tabIndex={0}
+							role="button"
+							onKeyDown={(e) => {
+								if (e.key === "Enter") navigate(`/event/${event._id}`);
+							}}
 						>
 							{/* Event Image & Badge */}
 							<div className="relative w-full h-48 overflow-hidden">
@@ -150,9 +122,11 @@ const Events = () => {
 									alt={event.name}
 									className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
 								/>
-								<span className="absolute top-4 left-4 bg-gradient-to-r from-cyan-500 to-violet-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg uppercase tracking-widest">
-									{event.badge}
-								</span>
+								{event.badge && (
+									<span className="absolute top-4 left-4 bg-gradient-to-r from-cyan-500 to-violet-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-lg uppercase tracking-widest">
+										{event.badge}
+									</span>
+								)}
 							</div>
 							{/* Event Details */}
 							<div className="flex-1 flex flex-col justify-between p-6 bg-gradient-to-br from-white via-cyan-50 to-violet-50">
@@ -171,20 +145,26 @@ const Events = () => {
 											<span className="text-lg">💸</span> ₹{event.price}
 										</span>
 									</div>
-									<div className="flex items-center gap-2 mb-2">
+									<div className="flex flex-wrap items-center gap-2 mb-2">
 										<span className="text-xs font-semibold text-cyan-700 bg-cyan-100 px-2 py-1 rounded">
 											Hosted by {event.host}
 										</span>
+										{event.mode && (
+											<span className="text-xs font-semibold text-violet-700 bg-violet-100 px-2 py-1 rounded">
+												{event.mode}
+											</span>
+										)}
+										{event.location && (
+											<span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-1 rounded">
+												{event.location}
+											</span>
+										)}
 									</div>
 									<p className="text-gray-700 mb-3 leading-relaxed text-sm line-clamp-2">
 										{event.description}
 									</p>
 								</div>
-								<div className="flex justify-end">
-									<button className="bg-gradient-to-r from-cyan-600 via-violet-500 to-blue-400 hover:from-cyan-700 hover:via-violet-600 hover:to-blue-500 text-white font-bold py-2 px-6 rounded-2xl shadow-lg transition-all duration-200 text-base tracking-tight uppercase">
-										Book Ticket
-									</button>
-								</div>
+								{/* Removed Book Ticket button */}
 							</div>
 						</div>
 					))

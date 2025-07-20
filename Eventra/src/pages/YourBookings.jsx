@@ -1,67 +1,44 @@
 import React, { useState } from "react";
 
-// Dummy data for demonstration
-const allBookings = [
-    {
-        id: "B001",
-        eventTitle: "Music Night Live",
-        eventImage: "/event-img.jpg",
-        date: "2025-07-25",
-        time: "7:00 PM",
-        location: "Delhi Auditorium",
-        price: 399,
-        email: "user@example.com",
-    },
-    {
-        id: "B002",
-        eventTitle: "AI Innovators Summit",
-        eventImage: "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=600&q=80",
-        date: "2025-05-10",
-        time: "10:00 AM",
-        location: "Tech Park, Bangalore",
-        price: 599,
-        email: "user@example.com",
-    },
-    {
-        id: "B003",
-        eventTitle: "Startup Expo",
-        eventImage: "https://images.unsplash.com/photo-1515168833906-d2a3b82b1a5e?auto=format&fit=crop&w=600&q=80",
-        date: "2025-08-15",
-        time: "9:00 AM",
-        location: "Mumbai Convention Center",
-        price: 299,
-        email: "user@example.com",
-    },
-    // Add more bookings as needed
-];
-
-function splitBookings(bookings) {
-    const now = new Date();
-    const upcoming = [];
-    const past = [];
-    bookings.forEach((b) => {
-        const eventDate = new Date(b.date);
-        if (eventDate >= now) {
-            upcoming.push(b);
-        } else {
-            past.push(b);
-        }
-    });
-    return { upcoming, past };
-}
-
 export default function YourBookings() {
     const [email, setEmail] = useState("");
     const [searched, setSearched] = useState(false);
-    const [filtered, setFiltered] = useState({ upcoming: [], past: [] });
+    const [bookings, setBookings] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const handleSearch = (e) => {
+    const handleSearch = async (e) => {
         e.preventDefault();
-        const bookings = allBookings.filter(
-            (b) => b.email.toLowerCase() === email.trim().toLowerCase()
-        );
-        setFiltered(splitBookings(bookings));
-        setSearched(true);
+        setLoading(true);
+        const userEmail = email;
+        try {
+            const res = await fetch(`http://localhost:5000/api/bookings/my-bookings?email=${userEmail}`);
+            const data = await res.json();
+
+            // Fetch event details for each booking
+            const detailedBookings = await Promise.all(
+                data.map(async (b) => {
+                    const res = await fetch(`http://localhost:5000/api/events/${b.eventId}`);
+                    const event = await res.json();
+                    return {
+                        ...b,
+                        eventImage: event.image,
+                        eventTitle: event.name,
+                        date: event.date,
+                        time: event.time,
+                        location: event.location,
+                        price: event.price,
+                    };
+                })
+            );
+
+            setBookings(detailedBookings);
+            setSearched(true);
+        } catch (error) {
+            console.error("Error fetching bookings:", error);
+            setBookings([]);
+            setSearched(true);
+        }
+        setLoading(false);
     };
 
     return (
@@ -85,106 +62,64 @@ export default function YourBookings() {
                     <button
                         type="submit"
                         className="bg-gradient-to-r from-blue-500 to-fuchsia-500 hover:from-blue-600 hover:to-fuchsia-600 text-white px-6 py-3 rounded-lg font-semibold shadow transition-all duration-200 text-base"
+                        disabled={loading}
                     >
-                        Show Bookings
+                        {loading ? "Loading..." : "Show Bookings"}
                     </button>
                 </form>
 
-                {searched && filtered.upcoming.length === 0 && filtered.past.length === 0 && (
+                {searched && bookings.length === 0 && (
                     <div className="text-center text-gray-400 text-lg font-medium py-8">
                         No bookings found for this email.
                     </div>
                 )}
 
-                {searched && (filtered.upcoming.length > 0 || filtered.past.length > 0) && (
-                    <div className="space-y-12">
-                        {/* Upcoming Bookings */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-indigo-700 mb-4 flex items-center gap-2">
-                                <span className="inline-block w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-                                Upcoming Events
-                            </h2>
-                            {filtered.upcoming.length === 0 ? (
-                                <div className="text-gray-400 text-base mb-6">No upcoming bookings.</div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {filtered.upcoming.map((b) => (
-                                        <div
-                                            key={b.id}
-                                            className="bg-white rounded-2xl shadow-xl border border-cyan-100 flex flex-col hover:shadow-2xl transition group relative overflow-hidden"
-                                        >
-                                            <div className="relative">
-                                                <img
-                                                    src={b.eventImage}
-                                                    alt={b.eventTitle}
-                                                    className="w-full h-40 object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
-                                                />
-                                                <span className="absolute top-3 right-3 bg-gradient-to-r from-cyan-500 to-violet-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow uppercase tracking-widest">
-                                                    Upcoming
-                                                </span>
-                                            </div>
-                                            <div className="p-4 flex-1 flex flex-col">
-                                                <h3 className="font-bold text-lg text-indigo-800 mb-1 line-clamp-1">{b.eventTitle}</h3>
-                                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-1">
-                                                    <span>📅 {b.date}</span>
-                                                    <span>⏰ {b.time}</span>
-                                                </div>
-                                                <div className="text-sm text-gray-600 mb-1">📍 {b.location}</div>
-                                                <div className="text-green-700 font-bold text-base mb-2">₹{b.price}</div>
-                                                <button className="mt-auto bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-700 hover:to-cyan-600 text-white py-2 rounded-lg font-semibold text-sm shadow transition-all duration-200">
-                                                    View Ticket
-                                                </button>
-                                            </div>
-                                            <div className="absolute inset-0 pointer-events-none rounded-2xl border-2 border-transparent group-hover:border-cyan-400 transition-all duration-300"></div>
-                                        </div>
-                                    ))}
+                {searched && bookings.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {bookings.map((b) => (
+                            <div
+                                key={b._id}
+                                className="bg-white rounded-2xl shadow-xl border border-cyan-100 flex flex-col hover:shadow-2xl transition group relative overflow-hidden"
+                            >
+                                <div className="relative">
+                                    <img
+                                        src={b.eventImage}
+                                        alt={b.eventTitle}
+                                        className="w-full h-40 object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
+                                    />
                                 </div>
-                            )}
-                        </section>
-
-                        {/* Past Bookings */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-                                <span className="inline-block w-2 h-2 rounded-full bg-gray-400"></span>
-                                Past Events
-                            </h2>
-                            {filtered.past.length === 0 ? (
-                                <div className="text-gray-400 text-base mb-6">No past bookings.</div>
-                            ) : (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {filtered.past.map((b) => (
-                                        <div
-                                            key={b.id}
-                                            className="bg-gray-50 rounded-2xl shadow border border-gray-200 flex flex-col hover:shadow-md transition group relative overflow-hidden"
-                                        >
-                                            <div className="relative">
-                                                <img
-                                                    src={b.eventImage}
-                                                    alt={b.eventTitle}
-                                                    className="w-full h-40 object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
-                                                />
-                                                <span className="absolute top-3 right-3 bg-gradient-to-r from-gray-400 to-gray-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow uppercase tracking-widest">
-                                                    Past
-                                                </span>
-                                            </div>
-                                            <div className="p-4 flex-1 flex flex-col">
-                                                <h3 className="font-bold text-lg text-gray-800 mb-1 line-clamp-1">{b.eventTitle}</h3>
-                                                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-1">
-                                                    <span>📅 {b.date}</span>
-                                                    <span>⏰ {b.time}</span>
-                                                </div>
-                                                <div className="text-sm text-gray-600 mb-1">📍 {b.location}</div>
-                                                <div className="text-green-700 font-bold text-base mb-2">₹{b.price}</div>
-                                                <button className="mt-auto bg-gradient-to-r from-gray-400 to-gray-600 text-white py-2 rounded-lg font-semibold text-sm shadow transition-all duration-200 cursor-not-allowed opacity-60">
-                                                    View Ticket
-                                                </button>
-                                            </div>
-                                            <div className="absolute inset-0 pointer-events-none rounded-2xl border-2 border-transparent group-hover:border-gray-400 transition-all duration-300"></div>
-                                        </div>
-                                    ))}
+                                <div className="p-6 flex flex-col gap-2">
+                                    <h3 className="font-bold text-xl text-indigo-800 mb-1">{b.eventTitle}</h3>
+                                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-2">
+                                        <span>👤 {b.name}</span>
+                                        <span>📧 {b.email}</span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-2">
+                                        <span>🆔 Booking ID: <span className="font-mono">{b._id}</span></span>
+                                        <span>🆔 Event ID: <span className="font-mono">{b.eventId}</span></span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-2">
+                                        <span>🎫 Tickets: <span className="font-bold">{b.numberOfTickets}</span></span>
+                                        <span>💸 Amount: <span className="font-bold text-green-700">₹{b.amount}</span></span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-2">
+                                        <span>📅 {b.date}</span>
+                                        <span>⏰ {b.time}</span>
+                                        <span>📍 {b.location}</span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-2">
+                                        <span>🕘 Booked At: {new Date(b.bookedAt).toLocaleString()}</span>
+                                        <span className={`font-bold ${b.status === "Paid" ? "text-green-600" : "text-yellow-600"}`}>
+                                            {b.status}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-2">
+                                        <span>Order ID: <span className="font-mono">{b.orderId}</span></span>
+                                        <span>Payment ID: <span className="font-mono">{b.paymentId}</span></span>
+                                    </div> 
                                 </div>
-                            )}
-                        </section>
+                            </div>
+                        ))}
                     </div>
                 )}
             </section>
