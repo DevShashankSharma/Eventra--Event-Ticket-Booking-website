@@ -5,8 +5,7 @@ import Logo from "../assets/eventralogo.png";
 
 const navItems = [
   { name: "All Events", path: "/" },
-  { name: "Your Bookings", path: "/bookings" },
-  // { name: "Dashboard", path: "/dashboard" },
+  { name: "Your Bookings", path: "/bookings" }, 
 ];
 
 export default function Navbar() {
@@ -54,13 +53,7 @@ export default function Navbar() {
                 `}
               />
             </Link>
-          ))}
-          {/* <Link
-            to="/signup"
-            className="ml-4 bg-gradient-to-r from-blue-500 to-fuchsia-500 hover:from-blue-600 hover:to-fuchsia-600 text-white px-5 py-2 rounded-lg font-semibold shadow transition-all duration-200"
-          >
-            Create Account
-          </Link> */}
+          ))} 
         </div>
 
         {/* Mobile Hamburger */}
@@ -90,14 +83,7 @@ export default function Navbar() {
               >
                 {item.name}
               </Link>
-            ))}
-            {/* <Link
-              to="/signup"
-              className="w-full text-center bg-gradient-to-r from-blue-500 to-fuchsia-500 text-white px-5 py-2 rounded-lg font-semibold shadow transition-all duration-200 mt-2"
-              onClick={() => setMenuOpen(false)}
-            >
-              Create Account
-            </Link> */}
+            ))} 
           </div>
         </div>
       )}

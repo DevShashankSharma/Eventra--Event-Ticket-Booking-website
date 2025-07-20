@@ -18,8 +18,6 @@ const BookingForm = () => {
       alert('Please fill all fields correctly.');
       return;
     }
-
-    // Show modal for now (you’ll replace with API + payment later)
     setShowModal(true);
   };
 
